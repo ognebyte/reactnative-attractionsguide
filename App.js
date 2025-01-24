@@ -1,7 +1,8 @@
 import { SafeAreaView, StatusBar } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { PaperProvider } from 'react-native-paper';
+import { PaperProvider, Portal } from 'react-native-paper';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
 import Main from './components/main'
 
@@ -41,11 +42,15 @@ onAuthStateChanged(auth, (user) => {
 const App = () => {
     return (
         <SafeAreaView style={{ flex: 1 }} >
-            <StatusBar backgroundColor={'#00000050'} barStyle={'light-content'} translucent/>
+            <StatusBar backgroundColor={'#00000050'} barStyle={'light-content'} translucent />
             <GestureHandlerRootView style={{ flex: 1 }}>
-                <PaperProvider>
-                    <Main />
-                </PaperProvider>
+                <BottomSheetModalProvider>
+                    <PaperProvider>
+                        <Portal>
+                            <Main />
+                        </Portal>
+                    </PaperProvider>
+                </BottomSheetModalProvider>
             </GestureHandlerRootView>
         </SafeAreaView>
     );
