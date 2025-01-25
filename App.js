@@ -1,8 +1,11 @@
-import { SafeAreaView, StatusBar } from 'react-native';
+import { StatusBar } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PaperProvider, Portal } from 'react-native-paper';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { Provider } from "react-redux";
+import store from "./features/store";
+
 
 import Main from './components/main'
 
@@ -18,7 +21,7 @@ onAuthStateChanged(auth, (user) => {
         const uid = user.uid;
         console.log(uid)
     } else {
-        console.log('asd')
+        // console.log('asd')
     }
 });
 
@@ -41,7 +44,7 @@ onAuthStateChanged(auth, (user) => {
 
 const App = () => {
     return (
-        <SafeAreaView style={{ flex: 1 }} >
+        <Provider store={store}>
             <StatusBar backgroundColor={'#00000050'} barStyle={'light-content'} translucent />
             <GestureHandlerRootView style={{ flex: 1 }}>
                 <BottomSheetModalProvider>
@@ -52,7 +55,7 @@ const App = () => {
                     </PaperProvider>
                 </BottomSheetModalProvider>
             </GestureHandlerRootView>
-        </SafeAreaView>
+        </Provider>
     );
 };
 

@@ -1,30 +1,57 @@
-import { useEffect } from "react";
-import { View, Text, ScrollView } from "react-native";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { FIREBASE_DB } from "../../firebase/firebase";
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useEffect, useState } from "react";
+import { View, StatusBar, ScrollView } from "react-native";
+import { Avatar, Button, Card, List, Text, IconButton, TouchableRipple } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDispatch, useSelector } from "react-redux";
 
 
 const Home = () => {
-    const insets = useSafeAreaInsets();
+    const cities = useSelector((state) => state.cities);
+    const attractions = useSelector((state) => state.attractions);
+    const categories = useSelector((state) => state.categories);
+    const [expanded, setExpanded] = useState(null); // Для управления раскрытием списка
 
-    const getData = async () => {
-        const querySnapshot = await getDocs(collection(FIREBASE_DB, "attractions"));
-        querySnapshot.forEach((doc) => {
-            // console.log(doc.id, " => ", doc.data());
-        });
-    }
-
-    useEffect(() => {
-        getData()
-    }, []);
+    const handlePress = (cityId) => {
+        setExpanded(expanded === cityId ? null : cityId); // Открываем или закрываем список
+    };
 
     return (
-        <ScrollView style={{ flex: 1, paddingTop: insets.top, height: 10000 }}>
-            <View style={{ height: 10000 }}>
-            <Text>Home</Text>
-            </View>
-        </ScrollView>
+        <SafeAreaView style={{ flex: 1 }}>
+            <ScrollView contentContainerStyle={{ paddingVertical: 16, gap: 16, paddingHorizontal: 0 }}>
+                {!cities ? null : cities.map((city) =>
+                    <Card key={city.id}
+                        style={{ borderRadius: 0, }}
+                        elevation={1}
+                    >
+                        <Card.Title
+                            title={city.name}
+                            titleVariant="titleLarge"
+                            left={(props) => <Avatar.Icon {...props} icon="folder" />}
+                            right={(props) => <IconButton {...props} icon="dots-vertical" onPress={() => { }} />}
+                        />
+                        <Card.Content>
+                            <ScrollView horizontal={true} contentContainerStyle={{ padding: 8, gap: 8 }}>
+                                {attractions?.filter((attraction) => attraction.city_id === city.id).map((attraction) =>
+                                    <TouchableRipple key={attraction.id}
+                                        style={{ width: 200, height: 120, borderRadius: 6, padding: 8, elevation: 1 }}
+                                        onPress={() => { }}
+                                    >
+                                        <>
+                                            <Text variant="titleMedium">
+                                                {attraction.name}
+                                            </Text>
+                                            <Text variant="bodyMedium" numberOfLines={2} ellipsizeMode="tail">
+                                                {attraction.description}
+                                            </Text>
+                                        </>
+                                    </TouchableRipple>
+                                )}
+                            </ScrollView>
+                        </Card.Content>
+                    </Card>
+                )}
+            </ScrollView>
+        </SafeAreaView>
     )
 };
 
