@@ -1,18 +1,19 @@
-import { StatusBar } from 'react-native';
+import { StatusBar, useColorScheme } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { PaperProvider, Portal } from 'react-native-paper';
+import { PaperProvider, Portal, MD3DarkTheme, MD3LightTheme, } from 'react-native-paper';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { Provider } from "react-redux";
 import store from "./features/store";
-
-
 import Main from './components/main'
+import customTheme from "./customTheme.json"
 
 /*
     for build apk:
     eas build -p android --profile preview
 */
+
 
 const auth = getAuth();
 onAuthStateChanged(auth, (user) => {
@@ -43,17 +44,26 @@ onAuthStateChanged(auth, (user) => {
 // };
 
 const App = () => {
+    const colorScheme = useColorScheme();
+
+    const paperTheme = colorScheme === 'light'
+        ? { ...MD3LightTheme, ...customTheme.light }
+        : { ...MD3DarkTheme, ...customTheme.dark };
+
+
     return (
         <Provider store={store}>
             <StatusBar backgroundColor={'#00000050'} barStyle={'light-content'} translucent />
             <GestureHandlerRootView style={{ flex: 1 }}>
-                <BottomSheetModalProvider>
-                    <PaperProvider>
-                        <Portal>
-                            <Main />
-                        </Portal>
-                    </PaperProvider>
-                </BottomSheetModalProvider>
+                <PaperProvider theme={paperTheme}>
+                    <Portal>
+                        <BottomSheetModalProvider>
+                            <NavigationContainer>
+                                <Main />
+                            </NavigationContainer>
+                        </BottomSheetModalProvider>
+                    </Portal>
+                </PaperProvider>
             </GestureHandlerRootView>
         </Provider>
     );

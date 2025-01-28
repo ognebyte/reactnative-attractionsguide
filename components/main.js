@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BottomNavigation, Text } from 'react-native-paper';
-import { collection, query, where, getDocs, setDoc, addDoc } from "firebase/firestore";
+import { collection, query, where, doc, getDocs, setDoc, addDoc, updateDoc } from "firebase/firestore";
 import { FIREBASE_DB } from "../firebase/firebase";
 import { useDispatch, useSelector } from "react-redux";
 import { setCities } from "../features/citiesSlice";

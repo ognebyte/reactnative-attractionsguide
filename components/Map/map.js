@@ -1,26 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import * as Location from 'expo-location';
-import { View, Alert, StatusBar } from 'react-native';
-import { Icon, IconButton, MD3Colors, SegmentedButtons, List, Text } from 'react-native-paper';
+import { View, Alert, StatusBar, Linking, StyleSheet, Image, ScrollView } from 'react-native';
+import { Icon, IconButton, SegmentedButtons, List, Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Svg, Path, Rect, Circle } from 'react-native-svg';
-import MapView, { Marker, Callout } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useDispatch, useSelector } from "react-redux";
 import iconStatue from '../../assets/icons/iconStatue';
 import iconMonument from '../../assets/icons/iconMonument';
 import iconMemorial from '../../assets/icons/iconMemorial';
 import iconStar from '../../assets/icons/iconStar';
+import iconMarker from '../../assets/icons/iconMarker';
+import { darkMapStyle } from "./mapStyles";
+import SkeletonLoading from '../SkeletonLoading';
 
-
-// - standard: standard road map (default)
-// - none: no map Note Not available on MapKit
-// - satellite: satellite view
-// - hybrid: satellite view with roads and points of interest overlayed
-// - terrain: topographic view
-// - mutedStandard: more subtle, makes markers/lines pop more (iOS 11.0+ only)
-// - satelliteFlyover: 3D globe with satellite view (iOS 13.0+ Apple Maps only)
-// - hybridFlyover: 3D globe with hybrid view (iOS 13.0+ Apple Maps only)
 
 const mapTypes = [
     { label: "Схема", value: 'standard', style: { borderRadius: 8 } },
@@ -33,14 +27,30 @@ const paddingHorizontal = 24;
 const padding = 4;
 const markerSize = 54
 
+const folderUrl = "../../assets/images/"
+
 const Map = () => {
+    const customTheme = useTheme();
+    const styles = StyleSheet.create({
+        bottomSheetModalBackground: {
+            backgroundColor: customTheme.colors.elevation.level3
+        },
+    });
+
+    const markerColor = customTheme.colors.secondaryContainer
+    const markerIconColor = customTheme.colors.secondary
+
     const mapRef = useRef(null);
     const bottomSheetMapOptionsRef = useRef(null);
     const bottomSheetMapMarkerRef = useRef(null);
-    const [currLocation, setCurrLocation] = useState(null);
+
+    const [gpsEnabled, setGpsEnabled] = useState(false); // Статус GPS
+    const [currLocation, setCurrLocation] = useState(null); // Статус GPS
+
     const [heading, setHeading] = useState(0); // Угол поворота карты
     const [mapType, setMapType] = useState(mapTypes[0].value);
     const [mapTraffic, setMapTraffic] = useState(false);
+    const [mapPoi, setMapPoi] = useState(true);
     const [mapOptionsVisible, setMapOptionsVisible] = useState(false);
     const [mapMarkerVisible, setMapMarkerVisible] = useState(false);
     const [zoomInterval, setZoomInterval] = useState(null);
@@ -48,43 +58,54 @@ const Map = () => {
     const cities = useSelector((state) => state.cities);
     const attractions = useSelector((state) => state.attractions);
     const categories = useSelector((state) => state.categories);
-    const [selectedAttraction, setSelectedAttraction] = useState(null); // Для отображения модального окна
+    const [selectedAttraction, setSelectedAttraction] = useState(null);
+    const [loadedImages, setLoadedImages] = useState({});
 
+    const handleImageLoad = (imageUri) => {
+        setLoadedImages((prevState) => ({
+            ...prevState,
+            [imageUri]: true,
+        }));
+    };
 
-    useEffect(() => {
-        const startLocationUpdates = async () => {
-            // Запрашиваем разрешение на доступ к местоположению
-            let { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== 'granted') {
-                Alert.alert('Ошибка', 'Разрешение на использование местоположения отклонено.');
-                return;
-            }
-            await Location.watchPositionAsync(
-                {
-                    accuracy: Location.Accuracy.High, // Высокая точность
-                    timeInterval: 5000, // Интервал обновления (5 секунд)
-                    distanceInterval: 10, // Минимальное расстояние для обновления (10 метров)
-                },
-                (location) => {
-                    const { latitude, longitude } = location.coords;
-                    // Обновляем карту на новую позицию
-                    setCurrLocation({
-                        latitude: latitude,
-                        longitude: longitude,
-                    });
-                }
+    const mapStyle = useMemo(() => {
+        return [
+            ...(customTheme.dark ? darkMapStyle : []),
+            {
+                featureType: "poi",
+                stylers: [{ visibility: mapPoi ? "on" : "off" }],
+            },
+        ];
+    }, [customTheme.dark, mapPoi]);
+
+    // Проверка GPS и запрос разрешений
+    const checkGpsStatus = async () => {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+            Alert.alert(
+                "Разрешение отклонено",
+                "Для работы приложения необходимо включить разрешение на использование GPS.",
+                [
+                    { text: "Отмена", style: "cancel" },
+                    { text: "Открыть настройки", onPress: () => Linking.openSettings() },
+                ]
             );
-        };
-        startLocationUpdates();
-    }, []);
+            return false;
+        }
+        const gpsEnabled = await Location.hasServicesEnabledAsync()
+
+        if (!gpsEnabled) Alert.alert(
+            "GPS отключен",
+            "Пожалуйста, включите GPS в настройках устройства.",
+            [{ text: "OK" }]
+        );
+        setGpsEnabled(gpsEnabled)
+        return gpsEnabled
+    };
 
     const handleMapOptionsPress = () => {
         if (mapMarkerVisible) bottomSheetMapMarkerRef.current.dismiss()
         mapOptionsVisible ? bottomSheetMapOptionsRef.current.dismiss() : bottomSheetMapOptionsRef.current.present()
-    }
-
-    const handleMapTraffic = () => {
-        setMapTraffic(prev => !prev)
     }
 
     const onMapPress = () => {
@@ -102,7 +123,7 @@ const Map = () => {
         bottomSheetMapMarkerRef.current.present()
     };
 
-    const onMapRegionChange = async () => {
+    const onMapRegionChange = async (val) => {
         let camera = await mapRef.current.getCamera()
         if (camera.heading != heading) setHeading(camera.heading)
     }
@@ -129,8 +150,8 @@ const Map = () => {
     };
 
     // Сбрасываем направление на север
-    const goToCurrentLocation = () => {
-        if (currLocation) {
+    const goToCurrentLocation = async () => {
+        if (await checkGpsStatus() && currLocation) {
             mapRef.current.animateCamera({
                 center: {
                     latitude: currLocation.latitude,
@@ -148,25 +169,28 @@ const Map = () => {
                 ref={mapRef}
                 onPress={onMapPress}
                 onRegionChange={onMapRegionChange}
-                style={{ position: 'absolute', top: 0, bottom: 0, right: 0, left: 0 }}
                 mapType={mapType}
+                style={{ position: 'absolute', top: 0, bottom: 0, right: 0, left: 0, backgroundColor: 'transparent' }}
+                customMapStyle={mapStyle}
                 showsTraffic={mapTraffic}
+                showsPointsOfInterest={mapPoi}
+                onUserLocationChange={({ nativeEvent }) => setCurrLocation(nativeEvent.coordinate)}
                 initialRegion={{
-                    latitude: 55.751244,
-                    longitude: 37.618423,
-                    latitudeDelta: 0.09,
-                    longitudeDelta: 0.09,
+                    latitude: 46.33255681298829,
+                    latitudeDelta: 74.06192509464654,
+                    longitude: 96.50912079960108,
+                    longitudeDelta: 72.32142426073551
                 }}
                 mapPadding={{ top: StatusBar.currentHeight }}
                 showsUserLocation={true}
                 showsCompass={false}
                 showsMyLocationButton={false}
+                renderToHardwareTextureAndroid={true}
                 showsScale={false}
-                pitchEnabled={true}
                 toolbarEnabled={false}
                 loadingEnabled={true}
-                loadingIndicatorColor="#666666"
-                loadingBackgroundColor="#eeeeee"
+                loadingIndicatorColor={customTheme.colors.primary}
+                loadingBackgroundColor={customTheme.colors.background}
             >
                 {attractions?.map((attraction) => (
                     <Marker
@@ -176,29 +200,28 @@ const Map = () => {
                             longitude: attraction.location.longitude,
                         }}
                         onPress={() => handleMarkerPress(attraction)}
-                        tracksViewChanges={false}
                         style={{
-                            opacity: selectedAttraction?.id === attraction.id ? 0.5 : 1
+                            opacity: selectedAttraction?.id === attraction.id ? 0.6 : 1
                         }}
+                        tracksViewChanges={false}
                     >
-                        <View style={{ position: 'relative', width: markerSize, height: markerSize, alignItems: 'center', justifyContent: 'center' }}>
-                            <Svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <Path d="M12 4C9.23082 4 6 5.982 6 11.0271C6 14.4504 10.6154 22.018 12 24C13.2308 22.018 18 14.6307 18 11.0271C18 5.982 14.7692 4 12 4Z"
-                                    fill="black"
-                                />
-                            </Svg>
-
+                        <View style={{
+                            position: 'relative',
+                            width: markerSize, height: markerSize,
+                            alignItems: 'center', justifyContent: 'center',
+                        }}>
+                            {iconMarker(markerColor, markerIconColor)}
                             <View style={{ position: 'absolute', width: markerSize / 2, height: markerSize / 2 }}>
                                 {(() => {
-                                    switch (attraction.category_id) {
+                                    switch (attraction.category) {
                                         case "statue":
-                                            return iconStatue()
+                                            return iconStatue(markerIconColor)
                                         case "monument":
-                                            return iconMonument()
+                                            return iconMonument(markerIconColor)
                                         case "memorial":
-                                            return iconMemorial()
+                                            return iconMemorial(markerIconColor)
                                         default:
-                                            return iconStar()
+                                            return iconStar(markerIconColor)
                                     }
                                 })()}
                             </View>
@@ -217,7 +240,6 @@ const Map = () => {
                                 <Path d="M15 12L11.9908 22L9 12H15Z" fill="black" />
                             </Svg>
                         }
-                        iconColor={MD3Colors.primary0}
                         size={24}
                         onPress={resetToNorth}
                         style={{
@@ -226,8 +248,7 @@ const Map = () => {
                     />
                     <IconButton
                         mode='contained'
-                        icon='crosshairs-gps'
-                        iconColor={MD3Colors.primary0}
+                        icon={gpsEnabled ? "crosshairs-gps" : "crosshairs-question"}
                         size={30}
                         onPress={goToCurrentLocation}
                     />
@@ -237,7 +258,6 @@ const Map = () => {
                     <IconButton
                         mode='contained'
                         icon='plus'
-                        iconColor={MD3Colors.primary0}
                         size={30}
                         onPressIn={() => mapZoom(true)}
                         onLongPress={() => startMapZoom(true)}
@@ -246,7 +266,6 @@ const Map = () => {
                     <IconButton
                         mode='contained'
                         icon='minus'
-                        iconColor={MD3Colors.primary0}
                         size={30}
                         onPressIn={() => mapZoom(false)}
                         onLongPress={() => startMapZoom(false)}
@@ -257,19 +276,16 @@ const Map = () => {
                 <IconButton
                     mode='contained'
                     icon={mapOptionsVisible ? 'layers' : 'layers-outline'}
-                    iconColor={MD3Colors.primary0}
                     size={30}
                     onPress={handleMapOptionsPress}
                     style={{ position: 'absolute', right: padding, top: padding }}
                 />
 
                 <BottomSheetModal ref={bottomSheetMapOptionsRef}
-                    onChange={(index) => {
-                        setMapOptionsVisible(prev => !prev)
-                    }
-                    }
+                    onChange={(index) => setMapOptionsVisible(prev => !prev)}
                     enableDynamicSizing={true}
                     topInset={StatusBar.currentHeight}
+                    backgroundStyle={styles.bottomSheetModalBackground}
                 >
                     <BottomSheetView>
                         <List.Section style={{ gap: gap }}>
@@ -280,17 +296,39 @@ const Map = () => {
                                 style={{ paddingHorizontal: paddingHorizontal }}
                             />
                             <List.Item
-                                left={() => <List.Icon icon={mapTraffic ? 'traffic-light' : 'traffic-light-outline'} />}
-                                title="Трафик"
-                                onPress={handleMapTraffic}
-                                style={{ paddingHorizontal: paddingHorizontal }}
+                                left={() =>
+                                    <List.Icon
+                                        icon={mapTraffic ? 'traffic-light' : 'traffic-light-outline'}
+                                    />
+                                }
+                                title="Пробки"
+                                onPress={() => setMapTraffic(prev => !prev)}
+                                style={{
+                                    paddingHorizontal: paddingHorizontal,
+                                    backgroundColor: mapTraffic ? customTheme.colors.secondaryContainer : undefined,
+                                }}
+                            />
+                            <List.Item
+                                left={() =>
+                                    <List.Icon
+                                        icon={mapPoi ? 'star-four-points' : 'star-four-points-outline'}
+                                    />
+                                }
+                                title="Точки интереса"
+                                onPress={() => setMapPoi(prev => !prev)}
+                                style={{
+                                    paddingHorizontal: paddingHorizontal,
+                                    backgroundColor: mapPoi ? customTheme.colors.secondaryContainer : undefined,
+                                }}
                             />
                         </List.Section>
                     </BottomSheetView>
                 </BottomSheetModal>
 
                 <BottomSheetModal ref={bottomSheetMapMarkerRef}
-                    snapPoints={['40%', '100%']}
+                    enableContentPanningGesture={false}
+                    enableDynamicSizing={true}
+                    // snapPoints={['40%', '100%']}
                     onChange={(index) => {
                         if (index >= 0) {
                             setMapMarkerVisible(true)
@@ -300,14 +338,53 @@ const Map = () => {
                         }
                     }}
                     topInset={StatusBar.currentHeight}
+                    backgroundStyle={styles.bottomSheetModalBackground}
                 >
                     <BottomSheetView>
-                        <Text titleVariant="titleLarge">
-                            {selectedAttraction?.name}
-                        </Text>
-                        <Text titleVariant="bodyMedium">
-                            {selectedAttraction?.description}
-                        </Text>
+                        <View style={{ gap: 16, paddingTop: 4, paddingBottom: 24 }}>
+
+                            <Text variant='titleLarge' numberOfLines={2}
+                                style={{ paddingHorizontal: 16 }}
+                            >
+                                {selectedAttraction?.name}
+                            </Text>
+
+                            <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 8 }}>
+                                <ScrollView
+                                    horizontal={true}
+                                    contentContainerStyle={{ padding: 8, gap: 8 }}
+                                    showsHorizontalScrollIndicator={false}
+                                >
+                                    {selectedAttraction?.images.map((image) =>
+                                        <View key={"map-attraction-image-" + image}
+                                            style={{ width: 128, height: 128 }}
+                                        >
+                                            {!loadedImages[image] && (<SkeletonLoading />)}
+                                            <Image
+                                                source={{ uri: image }}
+                                                width={'100%'} height={'100%'}
+                                                onLoad={() => handleImageLoad(image)}
+                                                style={{
+                                                    borderRadius: 8,
+                                                    display: !loadedImages[image] ? 'none' : 'flex',
+                                                }}
+                                            />
+                                        </View>
+                                    )}
+                                </ScrollView>
+                            </View>
+
+                            <Text variant="bodyMedium"
+                                style={{ paddingHorizontal: 16 }}
+                            >
+                                {selectedAttraction?.description}
+                            </Text>
+                            <Text variant="bodyMedium"
+                                style={{ paddingHorizontal: 16 }}
+                            >
+                                {selectedAttraction?.history}
+                            </Text>
+                        </View>
                     </BottomSheetView>
                 </BottomSheetModal>
             </View>
