@@ -1,19 +1,23 @@
 import { View } from "react-native";
-import Skeleton from "react-native-reanimated-skeleton";
 import { useTheme } from 'react-native-paper';
+import Skeleton from "react-native-reanimated-skeleton";
 
-const SkeletonLoading = () => {
+
+const SkeletonLoading = ({ width = '100%', height = '100%' }) => {
     const customTheme = useTheme();
 
     return (
-        <Skeleton
-            isLoading={true}
-            animationDirection="horizontalRight"
-            boneColor={customTheme.colors.inverseOnSurface}
-            highlightColor={customTheme.colors.surfaceVariant}
-        >
-            <View style={{ flex: 1, width: '100%', height: '100%' }} />
-        </Skeleton>
+        <View style={{ width: width, height: height }}>
+            <Skeleton
+                isLoading={true}
+                animationDirection="horizontalRight"
+                boneColor={customTheme.colors.inverseOnSurface}
+                highlightColor={customTheme.colors.surfaceVariant}
+                layout={[
+                    { width: width, height: height }
+                ]}
+            />
+        </View>
     )
 }
 

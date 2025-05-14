@@ -1,11 +1,11 @@
 import { StatusBar, useColorScheme } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { Provider } from "react-redux";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PaperProvider, Portal, MD3DarkTheme, MD3LightTheme, } from 'react-native-paper';
-import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import { Provider } from "react-redux";
-import store from "./features/store";
+import { NavigationContainer } from '@react-navigation/native';
+import store from "./features/store/store";
 import Main from './components/main'
 import customTheme from "./customTheme.json"
 
@@ -16,6 +16,7 @@ import customTheme from "./customTheme.json"
 
 
 const auth = getAuth();
+
 onAuthStateChanged(auth, (user) => {
     // isAuth()
     if (user) {
@@ -49,7 +50,6 @@ const App = () => {
     const paperTheme = colorScheme === 'light'
         ? { ...MD3LightTheme, ...customTheme.light }
         : { ...MD3DarkTheme, ...customTheme.dark };
-
 
     return (
         <Provider store={store}>

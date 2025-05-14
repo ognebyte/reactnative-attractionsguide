@@ -1,20 +1,16 @@
 import { useState, useEffect } from 'react';
-import { View, Image, Dimensions, ScrollView } from 'react-native';
-import { Text, TouchableRipple } from 'react-native-paper';
 import { useSelector } from "react-redux";
-import Carousel from "react-native-reanimated-carousel";
+import { View, Image, Dimensions, ScrollView } from 'react-native';
+import { Text, TouchableRipple, useTheme } from 'react-native-paper';
 import { useSharedValue } from "react-native-reanimated";
+import Carousel from "react-native-reanimated-carousel";
 import SkeletonLoading from "../SkeletonLoading";
-import Pagination from '../Pagination';
-
-
-const { width: screenWidth } = Dimensions.get('window');
 
 
 const CityScreen = ({ route, navigation }) => {
+    const customTheme = useThemee();
     const { city } = route.params;
     const attractions = useSelector((state) => state.attractions);
-    const progress = useSharedValue(0);
     const [loadedImages, setLoadedImages] = useState({});
 
 
@@ -25,51 +21,12 @@ const CityScreen = ({ route, navigation }) => {
         }));
     };
 
-
     return (
         <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
-            <Carousel
-                data={city.images}
-                loop={false}
-                width={screenWidth}
+            <ImageCarousel
+                images={currentCity.images}
                 height={300}
-                mode="parallax"
-                modeConfig={{
-                    parallaxScrollingScale: 0.9,
-                    parallaxScrollingOffset: 75,
-                    parallaxAdjacentItemScale: 0.7
-                }}
-                onProgressChange={(_, absolute) => progress.value = absolute}
-                renderItem={({ item }) =>
-                    <>
-                        {!loadedImages[item] && (
-                            <SkeletonLoading key={"skeleton-" + item} />
-                        )}
-                        <Image
-                            key={item}
-                            source={{ uri: item }}
-                            width={'100%'} height={'100%'}
-                            onLoad={() => handleImageLoad(item)}
-                            style={{
-                                flex: 1, borderRadius: 8,
-                                display: !loadedImages[item] ? 'none' : 'flex',
-                            }}
-                        />
-                    </>
-                }
             />
-            <View style={{
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: 8,
-            }}>
-                {city.images.map((_, index) => (
-                    <Pagination key={"city-image-" + index}
-                        progress={progress} index={index}
-                    />
-                ))}
-            </View>
             <View style={{ paddingVertical: 8, paddingHorizontal: 16, gap: 8 }}>
                 <Text variant="titleLarge">{city.name}</Text>
                 <Text variant="bodyLarge">Основан: {city.founded}</Text>
@@ -91,9 +48,7 @@ const CityScreen = ({ route, navigation }) => {
                     >
                         <>
                             <View style={{ height: 120 }}>
-                                {!loadedImages[attraction.images[0]] && (
-                                    <SkeletonLoading />
-                                )}
+                                {!loadedImages[attraction.images[0]] && <SkeletonLoading />}
                                 <Image
                                     source={{ uri: attraction.images[0] }}
                                     width={'100%'} height={'100%'}

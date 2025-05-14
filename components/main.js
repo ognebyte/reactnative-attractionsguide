@@ -1,64 +1,117 @@
 import { useState, useEffect } from 'react';
-import { BottomNavigation, Text } from 'react-native-paper';
-import { collection, query, where, doc, getDocs, setDoc, addDoc, updateDoc } from "firebase/firestore";
-import { FIREBASE_DB } from "../firebase/firebase";
 import { useDispatch, useSelector } from "react-redux";
-import { setCities } from "../features/citiesSlice";
-import { setAttractions } from "../features/attractionsSlice";
-import { setCategories } from "../features/categoriesSlice";
+import { View } from 'react-native';
+import { BottomNavigation, useTheme } from 'react-native-paper';
+
+import { getAllAsyncStorage, getAsyncStorage, setAsyncStorage } from '../features/AsyncStorage';
+import { getCollection, getDocById, getDocumentsFromCollection } from '../firebase/firebaseService';
+
+import { setCity } from "../features/store/citySlice";
+import { setCities } from "../features/store/citiesSlice";
+import { setAttractions } from "../features/store/attractionsSlice";
+import { setCategories } from "../features/store/categoriesSlice";
 
 import Map from './Map/map';
 import Home from './Home/home';
+import Settings from './Settings/settings';
+import CitySelectScreen from './CitySelectScreen';
+import SkeletonLoading from './SkeletonLoading';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 const Main = () => {
+    const [isFirstLaunch, setIsFirstLaunch] = useState(null);
+    const customTheme = useTheme();
+    const dispatch = useDispatch();
+    const currentCity = useSelector((state) => state.city);
     const [index, setIndex] = useState(0);
-    const [routes] = useState([
+    const routes = [
         { key: 'home', title: 'Home', focusedIcon: 'home', unfocusedIcon: 'home-outline' },
         { key: 'map', title: 'Map', focusedIcon: 'map', unfocusedIcon: 'map-outline' },
-    ]);
-    const dispatch = useDispatch();
-
-
-    useEffect(() => {
-        setReduxData()
-    }, []);
-
-    const getData = async (name) => {
-        const dataRef = await getDocs(collection(FIREBASE_DB, name));
-        return dataRef.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    }
-
-    const setReduxData = async () => {
-        try {
-            const [citiesData, attractionsData, categoriesData] = await Promise.all([
-                getData("cities"),
-                getData("attractions"),
-                getData("categories"),
-            ]);
-            dispatch(setCities(citiesData));
-            dispatch(setAttractions(attractionsData));
-            dispatch(setCategories(categoriesData));
-        } catch (error) {
-            console.error("Ошибка при получении данных:", error);
-        }
-    }
-
+        { key: 'settings', title: 'Settings', focusedIcon: 'cog', unfocusedIcon: 'cog-outline' },
+    ];
     const renderScene = BottomNavigation.SceneMap({
         home: Home,
-        map: Map
+        map: Map,
+        settings: Settings,
     });
 
 
+    useEffect(() => {
+        checkAppLaunch();
+    }, []);
+
+    useEffect(() => {
+        if (currentCity?.id) {
+            setAsyncStorage('current-city-id', currentCity.id);
+            loadCityRelatedData(currentCity.id);
+            setIsFirstLaunch(false);
+        }
+    }, [currentCity]);
+
+    const checkAppLaunch = async () => {
+        try {
+            const cityId = await getAsyncStorage('current-city-id');
+            if (!cityId) {
+                setIsFirstLaunch(true);
+            } else {
+                setIsFirstLaunch(false);
+                loadEssentialData(cityId);
+            }
+        } catch (err) {
+            setIsFirstLaunch(true);
+            console.error(err);
+        }
+    };
+
+
+    const loadEssentialData = async (cityId) => {
+        try {
+            const [city, attractionsData, categoriesData] = await Promise.all([
+                getDocById('cities', cityId),
+                getDocumentsFromCollection('attractions', 'city_id', cityId),
+                getCollection('categories'),
+            ]);
+            dispatch(setCity(city))
+            dispatch(setAttractions(attractionsData));
+            dispatch(setCategories(categoriesData));
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const loadCityRelatedData = async (cityId) => {
+        try {
+            const [attractionsData, categoriesData] = await Promise.all([
+                getDocumentsFromCollection('attractions', 'city_id', cityId),
+                getCollection("categories"),
+            ]);
+            dispatch(setAttractions(attractionsData));
+            dispatch(setCategories(categoriesData));
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     return (
-        <BottomNavigation
-            navigationState={{ index, routes }}
-            onIndexChange={setIndex}
-            renderScene={renderScene}
-            sceneAnimationEnabled={true}
-            sceneAnimationType={'opacity'}
-            shifting={true}
-        />
+        <View style={{ flex: 1, backgroundColor: customTheme.colors.background }}>
+            {
+                isFirstLaunch === null ? <SkeletonLoading /> :
+                    isFirstLaunch ?
+                        <SafeAreaView style={{ flex: 1 }}>
+                            <CitySelectScreen />
+                        </SafeAreaView>
+                        :
+                        <BottomNavigation
+                            navigationState={{ index, routes }}
+                            onIndexChange={setIndex}
+                            renderScene={renderScene}
+                            sceneAnimationEnabled={true}
+                            sceneAnimationType={'opacity'}
+                            shifting={true}
+                        />
+            }
+        </View>
     );
 };
 
