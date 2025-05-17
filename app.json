@@ -4,20 +4,20 @@
         "slug": "reactnative-attractionsguide",
         "version": "1.0.0",
         "orientation": "portrait",
-        "icon": "./assets/icon.png",
+        "icon": "./public/icon.png",
         "userInterfaceStyle": "automatic",
         "splash": {
-            "image": "./assets/splash.png",
+            "image": "./public/splash.png",
             "resizeMode": "contain",
-            "backgroundColor": "#ffffff"
+            "backgroundColor": "#7A8463"
         },
         "ios": {
             "supportsTablet": true
         },
         "android": {
             "adaptiveIcon": {
-                "foregroundImage": "./assets/adaptive-icon.png",
-                "backgroundColor": "#ffffff"
+                "foregroundImage": "./public/adaptive-icon.png",
+                "backgroundColor": "#7A8463"
             },
             "permissions": [
                 "ACCESS_FINE_LOCATION",
@@ -25,7 +25,7 @@
             ]
         },
         "web": {
-            "favicon": "./assets/favicon.png"
+            "favicon": "./public/favicon.png"
         }
     }
 }

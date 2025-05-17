@@ -1,12 +1,20 @@
 {
     "compilerOptions": {
-        "target": "es6",
-        "module": "CommonJS",
         "allowJs": true,
-        "checkJs": false,
-        "jsx": "react-jsx"
+        "checkJs": true,
+        "jsx": "react-jsx",
+        "baseUrl": ".",
+        "paths": {
+            "@*": [
+                "src/*"
+            ],
+            "@firebase/auth": [
+                "./node_modules/@firebase/auth/dist/index.rn.d.ts"
+            ]
+        }
     },
     "exclude": [
-        "node_modules"
-    ]
+        "node_modules",
+        "expo/tsconfig.base"
+    ],
 }
