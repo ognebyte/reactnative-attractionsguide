@@ -34,7 +34,7 @@ const CategoriesChips = ({ categories, selectedCategory, setSelectedCategory }) 
                         <SkeletonLoading
                             key={`categories-skeleton-${index}`}
                             // @ts-ignore
-                            skeletonWidth={80} skeletonHeight={28}
+                            skeletonWidth={80} skeletonHeight={30}
                         />
                     ) :
                     categories.map(category =>

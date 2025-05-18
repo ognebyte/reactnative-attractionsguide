@@ -11,7 +11,7 @@ const SearchBarInput = ({ value, onChange, modeView = false, placeholder = "По
             inputStyle={{
                 minHeight: 0,
             }}
-            style={[{ height: 'auto' }, style]}
+            style={[{ height: 'auto', padding: 0, margin: 0 }, style]}
         />
     );
 };

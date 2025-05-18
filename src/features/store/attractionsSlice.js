@@ -4,6 +4,9 @@ const attractionsSlice = createSlice({
     name: "attractions",
     initialState: [],
     reducers: {
+        initialStateAttractions() {
+            return []
+        },
         setAttractions(state, action) {
             return action.payload;
         },
@@ -16,5 +19,5 @@ const attractionsSlice = createSlice({
     },
 });
 
-export const { setAttractions, addAttractions, removeAttractions } = attractionsSlice.actions;
+export const { initialStateAttractions, setAttractions, addAttractions, removeAttractions } = attractionsSlice.actions;
 export default attractionsSlice.reducer;

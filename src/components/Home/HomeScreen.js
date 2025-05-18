@@ -81,11 +81,11 @@ const HomeScreen = ({ navigation }) => {
 
             <ScrollView stickyHeaderIndices={[1]}>
                 <View style={{ paddingBottom: 8 }}>
-                    <CurrentCity />
+                    <CurrentCity navigation={navigation} />
                 </View>
 
-                <View>
-                    <View style={{ paddingBottom: 8, gap: 8, backgroundColor: customTheme.colors.background }}>
+                <View style={{ paddingBottom: 8, backgroundColor: customTheme.colors.background }}>
+                    <View style={{ gap: 8 }}>
                         <Text variant="headlineSmall" style={{ paddingHorizontal: 8 }}>Достопримечательности</Text>
                         <View style={{ paddingHorizontal: 8 }}>
                             <SearchBarInput
@@ -105,8 +105,7 @@ const HomeScreen = ({ navigation }) => {
                 <View style={{
                     flexDirection: 'row',
                     flexWrap: 'wrap',
-                    columnGap: itemSpacing,
-                    rowGap: itemSpacing * 2,
+                    gap: itemSpacing * 2,
                     paddingHorizontal: itemSpacing * 2,
                     paddingBottom: 24
                 }}>

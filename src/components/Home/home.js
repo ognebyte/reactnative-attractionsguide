@@ -1,24 +1,33 @@
-import { IconButton, useTheme } from 'react-native-paper';
+import { useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { createStackNavigator } from '@react-navigation/stack';
-import { useNavigation } from '@react-navigation/native';
+import { useTheme } from 'react-native-paper';
 import HomeScreen from './HomeScreen';
+import CitySelectScreen from '@/components/CitySelectScreen';
 import CityScreen from './CityScreen';
 import AttractionScreen from './AttractionScreen';
-import CitySelectScreen from '@/components/CitySelectScreen';
 
 
 const Stack = createStackNavigator();
 
 
-const Home = () => {
+const Home = (props) => {
     const customTheme = useTheme();
-    const navigation = useNavigation();
+    // @ts-ignore
+    const map = useSelector((state) => state.map);
 
     const stackScreens = [
+        { name: 'Home', component: HomeScreen },
         { name: 'Select City', component: CitySelectScreen },
         { name: 'City', component: CityScreen },
         { name: 'Attraction', component: AttractionScreen },
     ];
+
+    useEffect(() => {
+        if (map) {
+            props.jumpTo('map')
+        }
+    }, [map])
 
     return (
         <
@@ -31,16 +40,10 @@ const Home = () => {
                 headerTitleStyle: { color: customTheme.colors.primary }
             }}
         >
-            <Stack.Screen name="Home" component={HomeScreen}
-                options={{
-                    headerShown: false,
-                }}
-            />
             {stackScreens.map(screen =>
                 <Stack.Screen name={screen.name} component={screen.component} key={screen.name}
                     options={{
-                        headerStyle: { height: 90, backgroundColor: customTheme.colors.elevation.level5 },
-                        headerLeft: () => <IconButton icon="arrow-left" onPress={navigation.goBack} />,
+                        headerShown: false
                     }}
                 />
             )}

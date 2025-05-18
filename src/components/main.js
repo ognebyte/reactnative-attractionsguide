@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from "react-redux";
 import { View } from 'react-native';
 import { BottomNavigation, useTheme } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getAsyncStorage, setAsyncStorage } from '@/features/AsyncStorage';
 import { getCollection, getDocById, getDocumentsFromCollection } from '@/firebase/firebaseService';
@@ -10,12 +11,11 @@ import { setCity } from "@/features/store/citySlice";
 import { setAttractions } from "@/features/store/attractionsSlice";
 import { setCategories } from "@/features/store/categoriesSlice";
 
-import Map from './Map/map';
 import Home from './Home/home';
 import Settings from './Settings/settings';
+import Map from './Map/map';
 import CitySelectScreen from './CitySelectScreen';
 import SkeletonLoading from './SkeletonLoading';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 const Main = () => {

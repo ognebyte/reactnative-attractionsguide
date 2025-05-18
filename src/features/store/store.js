@@ -3,6 +3,7 @@ import cityReducer from "./citySlice";
 import citiesReducer from "./citiesSlice";
 import attractionsReducer from "./attractionsSlice";
 import categoriesReducer from "./categoriesSlice";
+import mapReducer from "./mapSlice";
 
 const store = configureStore({
     reducer: {
@@ -10,6 +11,7 @@ const store = configureStore({
         cities: citiesReducer,
         attractions: attractionsReducer,
         categories: categoriesReducer,
+        map: mapReducer,
     },
 });
 

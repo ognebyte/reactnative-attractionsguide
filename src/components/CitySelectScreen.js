@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from "react-redux";
 import { View, ScrollView } from "react-native";
-import { Searchbar, Text, TouchableRipple } from 'react-native-paper';
+import { Text, TouchableRipple, useTheme } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getCollection } from '@/firebase/firebaseService';
 import { setCities } from '@/features/store/citiesSlice';
 import { setCity } from "@/features/store/citySlice";
 import SkeletonLoading from './SkeletonLoading';
 import SearchBarInput from './SearchBarInput';
+import { initialStateAttractions, setAttractions } from '@features/store/attractionsSlice';
+import GoBackButton from './GoBackButton';
 
 
 const CitySelectScreen = ({ navigation = null }) => {
+    const customTheme = useTheme();
     const dispatch = useDispatch();
     // @ts-ignore
     const cities = useSelector((state) => state.cities);
@@ -26,6 +30,7 @@ const CitySelectScreen = ({ navigation = null }) => {
     const getCities = async () => {
         const citiesData = await getCollection("cities");
         dispatch(setCities(citiesData));
+        dispatch(initialStateAttractions())
     };
 
     useEffect(() => {
@@ -46,18 +51,23 @@ const CitySelectScreen = ({ navigation = null }) => {
     );
 
     return (
-        <View style={{ flex: 1 }}>
-            <View style={{ margin: 0 }}>
+        <SafeAreaView style={{ flex: 1 }}>
+            <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: 8,
+                gap: 4,
+            }}>
+                <GoBackButton navigation={navigation} absolute={false} customColor={false} />
                 <SearchBarInput
                     value={searchQuery}
                     onChange={setSearchQuery}
-                    modeView
-                    style={{ backgroundColor: 'transparent' }}
+                    style={{ flex: 1 }}
                 />
             </View>
             <ScrollView contentContainerStyle={{ gap: 8, paddingVertical: 8 }}>
                 {!cities || cities.length === 0 ?
-                    Array(10).fill(null).map((_, index) =>
+                    Array(5).fill(null).map((_, index) =>
                         // @ts-ignore
                         <SkeletonLoading key={`city-skeleton-${index}`} skeletonHeight={40} />
                     )
@@ -83,7 +93,7 @@ const CitySelectScreen = ({ navigation = null }) => {
                         )
                 }
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 };
 
