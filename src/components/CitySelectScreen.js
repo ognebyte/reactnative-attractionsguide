@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from "react-redux";
 import { View, ScrollView } from "react-native";
-import { Text, TouchableRipple, useTheme } from 'react-native-paper';
+import { Text, TouchableRipple } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getCollection } from '@/firebase/firebaseService';
@@ -9,12 +9,11 @@ import { setCities } from '@/features/store/citiesSlice';
 import { setCity } from "@/features/store/citySlice";
 import SkeletonLoading from './SkeletonLoading';
 import SearchBarInput from './SearchBarInput';
-import { initialStateAttractions, setAttractions } from '@features/store/attractionsSlice';
+import { initialStateAttractions } from '@features/store/attractionsSlice';
 import GoBackButton from './GoBackButton';
 
 
 const CitySelectScreen = ({ navigation = null }) => {
-    const customTheme = useTheme();
     const dispatch = useDispatch();
     // @ts-ignore
     const cities = useSelector((state) => state.cities);
@@ -34,7 +33,8 @@ const CitySelectScreen = ({ navigation = null }) => {
     };
 
     useEffect(() => {
-        navigation.setOptions({ title: 'Выбор города' });
+        if (navigation)
+            navigation.setOptions({ title: 'Выбор города' });
         if (!cities || cities.length === 0) {
             getCities();
         }
@@ -58,7 +58,9 @@ const CitySelectScreen = ({ navigation = null }) => {
                 padding: 8,
                 gap: 4,
             }}>
-                <GoBackButton navigation={navigation} absolute={false} customColor={false} />
+                {!navigation ? null :
+                    <GoBackButton navigation={navigation} customColor={false} />
+                }
                 <SearchBarInput
                     value={searchQuery}
                     onChange={setSearchQuery}

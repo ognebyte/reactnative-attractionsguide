@@ -13,7 +13,7 @@ const MapControls = ({
     onZoomOut,
     onStartZoom,
     onStopZoom,
-    padding = 4
+    padding = 4,
 }) => {
     return (
         <>

@@ -4,7 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Icon, Text } from 'react-native-paper';
 import ImageCarousel from '@/components/ImageCarousel';
 import GoBackButton from '@components/GoBackButton';
-import { jumpTo } from "@features/store/mapSlice";
+import { setMapCoordinates } from "@features/store/mapSlice";
+import GoMapButton from "@components/GoMapButton";
 
 
 const CityScreen = ({ route, navigation }) => {
@@ -13,13 +14,20 @@ const CityScreen = ({ route, navigation }) => {
 
 
     const handleNavigateToMap = () => {
-        dispatch(jumpTo(city.location));
+        dispatch(setMapCoordinates({
+            latitude: city.location.latitude,
+            longitude: city.location.longitude,
+            isCity: true,
+        }));
     };
 
     return (
-        <SafeAreaView>
-            <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
-                <GoBackButton navigation={navigation} />
+        <SafeAreaView style={{ flex: 1 }}>
+            <ScrollView contentContainerStyle={{ paddingBottom: 50 }} stickyHeaderIndices={[0]}>
+                <View style={{ paddingLeft: 8, paddingTop: 8 }}>
+                    <GoBackButton navigation={navigation} />
+                </View>
+
                 <ImageCarousel
                     images={city.images}
                     height={300}
@@ -36,15 +44,6 @@ const CityScreen = ({ route, navigation }) => {
                             {city.location.latitude}, {city.location.longitude}
                         </Text>
                     </View>
-
-                    <Button
-                        icon="map"
-                        mode="outlined"
-                        onPress={handleNavigateToMap}
-                        compact
-                    >
-                        Открыть на карте
-                    </Button>
 
                     <Text variant="titleMedium">
                         Основан:{' '}
@@ -78,6 +77,10 @@ const CityScreen = ({ route, navigation }) => {
                     </Text>
                 </View>
             </ScrollView>
+
+            <View style={{ flex: 1, position: 'absolute', zIndex: 10 }}>
+            </View>
+            <GoMapButton handleButton={handleNavigateToMap} />
         </SafeAreaView>
     );
 };

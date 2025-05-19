@@ -11,7 +11,7 @@ import AttractionScreen from './AttractionScreen';
 const Stack = createStackNavigator();
 
 
-const Home = (props) => {
+const Home = ({ jumpTo }) => {
     const customTheme = useTheme();
     // @ts-ignore
     const map = useSelector((state) => state.map);
@@ -24,8 +24,8 @@ const Home = (props) => {
     ];
 
     useEffect(() => {
-        if (map) {
-            props.jumpTo('map')
+        if (map.shouldAnimate) {
+            jumpTo('map')
         }
     }, [map])
 

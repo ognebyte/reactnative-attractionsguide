@@ -1,8 +1,8 @@
+import * as SplashScreen from 'expo-splash-screen';
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from "react-redux";
 import { View } from 'react-native';
 import { BottomNavigation, useTheme } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getAsyncStorage, setAsyncStorage } from '@/features/AsyncStorage';
 import { getCollection, getDocById, getDocumentsFromCollection } from '@/firebase/firebaseService';
@@ -11,11 +11,13 @@ import { setCity } from "@/features/store/citySlice";
 import { setAttractions } from "@/features/store/attractionsSlice";
 import { setCategories } from "@/features/store/categoriesSlice";
 
-import Home from './Home/home';
-import Settings from './Settings/settings';
-import Map from './Map/map';
 import CitySelectScreen from './CitySelectScreen';
-import SkeletonLoading from './SkeletonLoading';
+import Home from './Home/home';
+import Map from './Map/map';
+import Settings from './Settings/settings';
+
+
+SplashScreen.preventAutoHideAsync(); // предотвратить авто-скрытие
 
 
 const Main = () => {
@@ -28,14 +30,20 @@ const Main = () => {
     const routes = [
         { key: 'home', title: 'Home', focusedIcon: 'home', unfocusedIcon: 'home-outline' },
         { key: 'map', title: 'Map', focusedIcon: 'map', unfocusedIcon: 'map-outline' },
-        { key: 'settings', title: 'Settings', focusedIcon: 'cog', unfocusedIcon: 'cog-outline' },
+        // { key: 'settings', title: 'Settings', focusedIcon: 'cog', unfocusedIcon: 'cog-outline' },
     ];
     const renderScene = BottomNavigation.SceneMap({
         home: Home,
         map: Map,
-        settings: Settings,
+        // settings: Settings,
     });
 
+
+    useEffect(() => {
+        if (isFirstLaunch != null) {
+            SplashScreen.hideAsync();
+        }
+    }, [isFirstLaunch]);
 
     useEffect(() => {
         checkAppLaunch();
@@ -55,8 +63,8 @@ const Main = () => {
             if (!cityId) {
                 setIsFirstLaunch(true);
             } else {
-                setIsFirstLaunch(false);
                 loadEssentialData(cityId);
+                setIsFirstLaunch(false);
             }
         } catch (err) {
             setIsFirstLaunch(true);
@@ -96,20 +104,17 @@ const Main = () => {
     return (
         <View style={{ flex: 1, backgroundColor: customTheme.colors.background }}>
             {
-                isFirstLaunch === null ? <SkeletonLoading /> :
-                    isFirstLaunch ?
-                        <SafeAreaView style={{ flex: 1 }}>
-                            <CitySelectScreen />
-                        </SafeAreaView>
-                        :
-                        <BottomNavigation
-                            navigationState={{ index, routes }}
-                            onIndexChange={setIndex}
-                            renderScene={renderScene}
-                            sceneAnimationEnabled={true}
-                            sceneAnimationType={'opacity'}
-                            shifting={true}
-                        />
+                isFirstLaunch ?
+                    <CitySelectScreen />
+                    :
+                    <BottomNavigation
+                        navigationState={{ index, routes }}
+                        onIndexChange={setIndex}
+                        renderScene={renderScene}
+                        sceneAnimationEnabled={true}
+                        sceneAnimationType={'opacity'}
+                        shifting={true}
+                    />
             }
         </View>
     );

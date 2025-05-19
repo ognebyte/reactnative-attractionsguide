@@ -5,10 +5,13 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PaperProvider, Portal, MD3DarkTheme, MD3LightTheme, } from 'react-native-paper';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { NavigationContainer } from '@react-navigation/native';
-import store from "./features/store/store";
+import store from "./src/features/store/store";
 // @ts-ignore
-import customTheme from "./customTheme.json"
-import Main from './components/main'
+import customTheme from "./src/customTheme.json"
+import Main from './src/components/main'
+
+import { enableScreens } from 'react-native-screens';
+enableScreens();
 
 /*
     for build apk:
@@ -16,17 +19,17 @@ import Main from './components/main'
 */
 
 
-const auth = getAuth();
+// const auth = getAuth();
 
-onAuthStateChanged(auth, (user) => {
-    // isAuth()
-    if (user) {
-        const uid = user.uid;
-        console.log(uid)
-    } else {
-        // console.log('asd')
-    }
-});
+// onAuthStateChanged(auth, (user) => {
+//     // isAuth()
+//     if (user) {
+//         const uid = user.uid;
+//         console.log(uid)
+//     } else {
+//         // console.log('asd')
+//     }
+// });
 
 // async function isAuth(){
 //     try {

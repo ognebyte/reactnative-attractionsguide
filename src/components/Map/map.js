@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { View, StatusBar, Image, ScrollView } from 'react-native';
 import { useTheme, SegmentedButtons, List, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,6 +13,11 @@ import { useLocation } from './hooks/useLocation';
 import MapControls from './MapControls';
 import MapMarker from './MapMarker';
 import SkeletonLoading from '@/components/SkeletonLoading';
+import { resetMapAnimateFlag } from '@features/store/mapSlice';
+import CategoriesChips from '@components/CategoriesChips';
+import ImageCarousel from '@components/ImageCarousel';
+import ImageLeftAlign from '@components/ImageLeftAlign';
+import getCategoryNameById from '@utils/getCategoryNameById';
 
 const INITIAL_REGION = {
     latitude: 46.33255681298829,
@@ -29,7 +34,10 @@ const MAP_TYPES = [
 
 const Map = () => {
     const theme = useTheme();
-    
+    const dispatch = useDispatch();
+
+    // @ts-ignore
+    const categories = useSelector((state) => state.categories);
     // @ts-ignore
     const currentCity = useSelector((state) => state.city);
     // @ts-ignore
@@ -43,38 +51,64 @@ const Map = () => {
     const bottomSheetMapOptionsRef = useRef(null);
     const bottomSheetMapMarkerRef = useRef(null);
 
+    const [selectedCategory, setSelectedCategory] = useState(0);
     const [heading, setHeading] = useState(0);
+    const [mapReady, setMapReady] = useState(false);
     const [mapType, setMapType] = useState('standard');
     const [mapTraffic, setMapTraffic] = useState(false);
     const [mapPoi, setMapPoi] = useState(true);
     const [selectedAttraction, setSelectedAttraction] = useState(null);
     const [mapOptionsVisible, setMapOptionsVisible] = useState(false);
     const [mapMarkerVisible, setMapMarkerVisible] = useState(false);
+    const [enableContentPanningGesture, setEnableContentPanningGesture] = useState(false);
     const [zoomInterval, setZoomInterval] = useState(null);
-    const [loadedImages, setLoadedImages] = useState({});
+    const [filteredAttractions, setFilteredAttractions] = useState([]);
 
 
     useEffect(() => {
-        if (currentCity?.location) {
-            animateToRegion({
-                latitude: currentCity.location.latitude,
-                longitude: currentCity.location.longitude,
-                latitudeDelta: 0.25,
-                longitudeDelta: 0.25,
-            });
+        if (mapReady && !mapStore.shouldAnimate) {
+            if (currentCity?.location) {
+                animateToRegion({
+                    latitude: currentCity.location.latitude,
+                    longitude: currentCity.location.longitude,
+                    latitudeDelta: 0.25,
+                    longitudeDelta: 0.25,
+                }, 0);
+            }
         }
-    }, [currentCity]);
+    }, [mapReady, currentCity]);
 
     useEffect(() => {
-        if (mapStore) {
+        if (mapReady && mapStore.shouldAnimate && mapRef.current) {
+            let zoom = mapStore.isCity ? 0.25 : 0.01
             animateToRegion({
                 latitude: mapStore.latitude,
                 longitude: mapStore.longitude,
-                latitudeDelta: 0.05,
-                longitudeDelta: 0.05,
+                latitudeDelta: zoom,
+                longitudeDelta: zoom,
             });
+
+            if (!mapStore.isCity) {
+                handleMarkerPress(mapStore.attraction)
+            }
+
+            dispatch(resetMapAnimateFlag());
         }
-    }, [mapStore]);
+    }, [mapReady, mapStore]);
+
+    useEffect(() => {
+        filterAttractions();
+    }, [selectedCategory, attractions]);
+
+    const filterAttractions = () => {
+        let result = [...attractions];
+
+        if (selectedCategory) {
+            result = result.filter(a => a.category === selectedCategory);
+        }
+
+        setFilteredAttractions(result);
+    };
 
     const mapStyle = useMemo(() => [
         ...(theme.dark ? darkMapStyle : []),
@@ -130,7 +164,7 @@ const Map = () => {
         if (mapMarkerVisible) {
             bottomSheetMapMarkerRef.current?.dismiss();
         }
-        
+
         if (mapOptionsVisible) {
             bottomSheetMapOptionsRef.current?.dismiss();
         } else {
@@ -155,18 +189,12 @@ const Map = () => {
         bottomSheetMapMarkerRef.current?.present();
     };
 
-    const handleImageLoad = (imageUri) => {
-        setLoadedImages((prevState) => ({
-            ...prevState,
-            [imageUri]: true,
-        }));
-    };
-
     return (
         <SafeAreaView style={{ flex: 1, position: 'relative' }}>
             <MapView
                 ref={mapRef}
                 onPress={onMapPress}
+                onMapReady={() => setMapReady(true)}
                 // @ts-ignore
                 mapType={mapType}
                 style={{
@@ -195,7 +223,7 @@ const Map = () => {
                 loadingIndicatorColor={theme.colors.primary}
                 loadingBackgroundColor={theme.colors.background}
             >
-                {attractions?.map((attraction) => (
+                {filteredAttractions?.map((attraction) => (
                     <MapMarker
                         key={attraction.id}
                         attraction={attraction}
@@ -205,19 +233,25 @@ const Map = () => {
                 ))}
             </MapView>
 
-            <View style={{ flex: 1 }}>
-                <MapControls
-                    gpsEnabled={gpsEnabled}
-                    heading={heading}
-                    mapOptionsVisible={mapOptionsVisible}
-                    onResetToNorth={() => animateCamera({ heading: 0 })}
-                    onGoToCurrentLocation={goToCurrentLocation}
-                    onMapOptionsPress={handleMapOptionsPress}
-                    onZoomIn={() => zoomMap(true)}
-                    onZoomOut={() => zoomMap(false)}
-                    onStartZoom={startMapZoom}
-                    onStopZoom={stopZoom}
-                />
+            <View style={{ flex: 1, position: 'relative' }}>
+                <View style={{ marginTop: 8 }}>
+                    <CategoriesChips categories={categories} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />
+                </View>
+
+                <View style={{ flex: 1 }}>
+                    <MapControls
+                        gpsEnabled={gpsEnabled}
+                        heading={heading}
+                        mapOptionsVisible={mapOptionsVisible}
+                        onResetToNorth={() => animateCamera({ heading: 0 })}
+                        onGoToCurrentLocation={goToCurrentLocation}
+                        onMapOptionsPress={handleMapOptionsPress}
+                        onZoomIn={() => zoomMap(true)}
+                        onZoomOut={() => zoomMap(false)}
+                        onStartZoom={startMapZoom}
+                        onStopZoom={stopZoom}
+                    />
+                </View>
 
                 {/* Map Options Modal */}
                 <BottomSheetModal
@@ -245,8 +279,8 @@ const Map = () => {
                                 onPress={() => setMapTraffic(prev => !prev)}
                                 style={{
                                     paddingHorizontal: 24,
-                                    backgroundColor: mapTraffic 
-                                        ? theme.colors.secondaryContainer 
+                                    backgroundColor: mapTraffic
+                                        ? theme.colors.secondaryContainer
                                         : undefined,
                                 }}
                             />
@@ -260,8 +294,8 @@ const Map = () => {
                                 onPress={() => setMapPoi(prev => !prev)}
                                 style={{
                                     paddingHorizontal: 24,
-                                    backgroundColor: mapPoi 
-                                        ? theme.colors.secondaryContainer 
+                                    backgroundColor: mapPoi
+                                        ? theme.colors.secondaryContainer
                                         : undefined,
                                 }}
                             />
@@ -272,74 +306,63 @@ const Map = () => {
                 {/* Attraction Modal */}
                 <BottomSheetModal
                     ref={bottomSheetMapMarkerRef}
-                    enableContentPanningGesture={false}
-                    enableDynamicSizing={true}
+                    enableContentPanningGesture={enableContentPanningGesture}
+                    snapPoints={[250, '80%']}
                     onChange={(index) => {
                         setMapMarkerVisible(index >= 0);
                         if (index < 0) {
                             setSelectedAttraction(null);
+                        }
+                        if (index > 0) {
+                            setEnableContentPanningGesture(false)
+                        } else {
+                            setEnableContentPanningGesture(true)
                         }
                     }}
                     topInset={StatusBar.currentHeight}
                     backgroundStyle={styles.bottomSheetModalBackground}
                 >
                     <BottomSheetView>
-                        {selectedAttraction && (
-                            <View style={{ gap: 16, paddingTop: 4, paddingBottom: 24 }}>
-                                <Text
-                                    variant='titleLarge'
-                                    numberOfLines={2}
-                                    style={{ paddingHorizontal: 16 }}
-                                >
-                                    {selectedAttraction.name}
-                                </Text>
-
-                                <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 8 }}>
-                                    <ScrollView
-                                        horizontal={true}
-                                        contentContainerStyle={{ padding: 8, gap: 8 }}
-                                        showsHorizontalScrollIndicator={false}
+                        <ScrollView contentContainerStyle={{ paddingTop: 4, paddingBottom: 24 }}>
+                            {selectedAttraction && (
+                                <View style={{ gap: 16 }}>
+                                    <Text
+                                        variant='titleLarge'
+                                        numberOfLines={2}
+                                        style={{ paddingHorizontal: 16 }}
                                     >
-                                        {selectedAttraction.images?.map((image) => (
-                                            <View
-                                                key={`map-attraction-image-${image}`}
-                                                style={{ width: 128, height: 128 }}
-                                            >
-                                                {!loadedImages[image] && <SkeletonLoading />}
-                                                <Image
-                                                    source={{ uri: image }}
-                                                    style={{
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        borderRadius: 8,
-                                                        display: !loadedImages[image] ? 'none' : 'flex',
-                                                    }}
-                                                    onLoad={() => handleImageLoad(image)}
-                                                />
-                                            </View>
-                                        ))}
-                                    </ScrollView>
+                                        {selectedAttraction.name}
+                                    </Text>
+
+                                    <ImageLeftAlign images={selectedAttraction.images} />
+
+                                    <Text
+                                        variant='titleMedium'
+                                        style={{ paddingHorizontal: 16, textAlign: 'right', opacity: .4 }}
+                                    >
+                                        {getCategoryNameById(categories, selectedAttraction.category)}
+                                    </Text>
+
+                                    {selectedAttraction.description && (
+                                        <Text variant="titleMedium" style={{ paddingHorizontal: 16 }}>
+                                            Описание{'\n'}
+                                            <Text variant="bodyMedium">
+                                                {selectedAttraction.description}
+                                            </Text>
+                                        </Text>
+                                    )}
+
+                                    {selectedAttraction.history && (
+                                        <Text variant="titleMedium" style={{ paddingHorizontal: 16 }}>
+                                            История{'\n'}
+                                            <Text variant="bodyMedium">
+                                                {selectedAttraction.history}
+                                            </Text>
+                                        </Text>
+                                    )}
                                 </View>
-
-                                {selectedAttraction.description && (
-                                    <Text
-                                        variant="bodyMedium"
-                                        style={{ paddingHorizontal: 16 }}
-                                    >
-                                        {selectedAttraction.description}
-                                    </Text>
-                                )}
-
-                                {selectedAttraction.history && (
-                                    <Text
-                                        variant="bodyMedium"
-                                        style={{ paddingHorizontal: 16 }}
-                                    >
-                                        {selectedAttraction.history}
-                                    </Text>
-                                )}
-                            </View>
-                        )}
+                            )}
+                        </ScrollView>
                     </BottomSheetView>
                 </BottomSheetModal>
             </View>

@@ -1,14 +1,19 @@
 import { useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { View, ScrollView } from 'react-native';
-import { IconButton, Text, useTheme } from 'react-native-paper';
-import getCategoryNameById from '@utils/getCategoryNameById';
-import ImageCarousel from '@/components/ImageCarousel';
+import { useDispatch, useSelector } from 'react-redux';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, ScrollView } from 'react-native';
+import { Text } from 'react-native-paper';
+
+import { setMapCoordinates } from '@features/store/mapSlice';
+import getCategoryNameById from '@utils/getCategoryNameById';
+
+import ImageCarousel from '@/components/ImageCarousel';
 import GoBackButton from '@components/GoBackButton';
+import GoMapButton from '@components/GoMapButton';
 
 
 const AttractionScreen = ({ route, navigation }) => {
+    const dispatch = useDispatch();
     const { attraction } = route.params;
     // @ts-ignore
     const categories = useSelector(state => state.categories);
@@ -18,11 +23,21 @@ const AttractionScreen = ({ route, navigation }) => {
         navigation.setOptions({ title: attraction.name });
     }, [navigation, attraction])
 
+    const handleNavigateToMap = () => {
+        dispatch(setMapCoordinates({
+            latitude: attraction.location.latitude,
+            longitude: attraction.location.longitude,
+            attraction: attraction
+        }));
+    };
 
     return (
-        <SafeAreaView>
-            <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
-                <GoBackButton navigation={navigation} />
+        <SafeAreaView style={{ flex: 1 }}>
+            <ScrollView contentContainerStyle={{ paddingBottom: 50 }} stickyHeaderIndices={[0]}>
+                <View style={{ paddingLeft: 8, paddingTop: 8 }}>
+                    <GoBackButton navigation={navigation} />
+                </View>
+
                 <ImageCarousel
                     images={attraction.images}
                     height={300}
@@ -49,6 +64,7 @@ const AttractionScreen = ({ route, navigation }) => {
                     </Text>
                 </View>
             </ScrollView>
+            <GoMapButton handleButton={handleNavigateToMap} />
         </SafeAreaView>
     );
 };

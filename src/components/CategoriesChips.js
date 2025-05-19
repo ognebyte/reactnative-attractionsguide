@@ -14,6 +14,7 @@ const CategoriesChips = ({ categories, selectedCategory, setSelectedCategory }) 
             showSelectedCheck={false}
             style={{
                 backgroundColor: selected ? customTheme.colors.primary : customTheme.colors.elevation.level1,
+                borderRadius: 8
             }}
             selectedColor={selected ? customTheme.colors.elevation.level1 : customTheme.colors.primary}
         >

@@ -51,12 +51,14 @@ const MapMarker = ({ attraction, onPress, isSelected }) => {
                 height: MARKER_SIZE,
                 alignItems: 'center',
                 justifyContent: 'center',
+                alignContent: 'center'
             }}>
                 {iconMarker(markerColor, markerIconColor)}
                 <View style={{
                     position: 'absolute',
                     width: MARKER_SIZE / 2,
-                    height: MARKER_SIZE / 2
+                    height: MARKER_SIZE / 2,
+                    alignSelf: 'center'
                 }}>
                     {getIcon(attraction.category)}
                 </View>
