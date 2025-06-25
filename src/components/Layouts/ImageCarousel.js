@@ -4,6 +4,7 @@ import { useTheme } from 'react-native-paper';
 import { useSharedValue } from 'react-native-reanimated';
 import Carousel, { Pagination } from "react-native-reanimated-carousel";
 import SkeletonLoading from './SkeletonLoading';
+import ImageView from './ImageView';
 
 
 
@@ -14,12 +15,8 @@ const paginationHeight = 2;
 const ImageCarousel = ({ images, width = screenWidth, height, pagination = true }) => {
     const customTheme = useTheme();
     const carouselRef = useRef(null);
-    const [loadedImages, setLoadedImages] = useState({});
     const progress = useSharedValue(0);
 
-    const handleImageLoad = (uri) => {
-        setLoadedImages((prev) => ({ ...prev, [uri]: true }));
-    };
 
     const onPressPagination = (index) => {
         if (carouselRef.current) {
@@ -28,10 +25,7 @@ const ImageCarousel = ({ images, width = screenWidth, height, pagination = true 
     };
 
     return (
-        <View style={{
-            flex: 1,
-            gap: 4
-        }}>
+        <View style={{ flex: 1, gap: 4 }}>
             <Carousel ref={carouselRef}
                 data={images}
                 width={width}
@@ -45,23 +39,7 @@ const ImageCarousel = ({ images, width = screenWidth, height, pagination = true 
                 }}
                 onProgressChange={progress}
                 renderItem={({ item }) => (
-                    <>
-                        {!loadedImages[item] && (
-                            <SkeletonLoading key={`skeleton-${item}`} />
-                        )}
-                        <Image
-                            key={item}
-                            source={{ uri: item }}
-                            // @ts-ignore
-                            width={'100%'} height={'100%'}
-                            onLoad={() => handleImageLoad(item)}
-                            style={{
-                                flex: 1,
-                                borderRadius: 8,
-                                display: !loadedImages[item] ? 'none' : 'flex',
-                            }}
-                        />
-                    </>
+                    <ImageView key={item} uri={item} imgWrapperHeight={'100%'} />
                 )}
             />
             {
@@ -70,17 +48,12 @@ const ImageCarousel = ({ images, width = screenWidth, height, pagination = true 
                         progress={progress}
                         data={images}
                         dotStyle={{
-                            width: 16,
-                            height: paginationHeight,
-                            backgroundColor: customTheme.colors.inverseOnSurface,
+                            width: 16, height: paginationHeight, backgroundColor: customTheme.colors.inverseOnSurface,
                         }}
                         activeDotStyle={{
-                            overflow: 'hidden',
-                            backgroundColor: customTheme.colors.onSurface,
+                            overflow: 'hidden', backgroundColor: customTheme.colors.onSurface,
                         }}
-                        containerStyle={{
-                            gap: 4
-                        }}
+                        containerStyle={{ gap: 4 }}
                         onPress={onPressPagination}
                         horizontal
                     />

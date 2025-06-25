@@ -9,18 +9,18 @@ import { setCities } from '@/features/store/citiesSlice';
 import { setCity } from "@/features/store/citySlice";
 import SkeletonLoading from './SkeletonLoading';
 import SearchBarInput from './SearchBarInput';
-import { initialStateAttractions } from '@features/store/attractionsSlice';
 import GoBackButton from './GoBackButton';
+import { initialStateAttractions } from '@features/store/attractionsSlice';
 
 
 const CitySelectScreen = ({ navigation = null }) => {
     const dispatch = useDispatch();
-    // @ts-ignore
     const cities = useSelector((state) => state.cities);
     const [searchQuery, setSearchQuery] = useState('');
 
     const setCurrentCity = (city) => {
         dispatch(setCity(city));
+        dispatch(initialStateAttractions())
         if (navigation) {
             navigation.goBack()
         }
@@ -29,7 +29,6 @@ const CitySelectScreen = ({ navigation = null }) => {
     const getCities = async () => {
         const citiesData = await getCollection("cities");
         dispatch(setCities(citiesData));
-        dispatch(initialStateAttractions())
     };
 
     useEffect(() => {

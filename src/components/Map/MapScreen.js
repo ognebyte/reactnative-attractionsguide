@@ -4,20 +4,19 @@ import { View, StatusBar, FlatList } from 'react-native';
 import { useTheme, SegmentedButtons, List } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
-import MapViewDirections from 'react-native-maps-directions';
 import { BottomSheetModal, BottomSheetModalProvider, BottomSheetView } from '@gorhom/bottom-sheet';
+import MapViewDirections from 'react-native-maps-directions';
 
 import { darkMapStyle } from "./hooks/darkMapStyle";
 import { useMapCamera } from './hooks/useMapCamera';
 import { useLocation } from './hooks/useLocation';
 
-import { resetMapAnimateFlag } from '@/features/store/mapSlice';
-import ChipItem from '@/components/Layouts/ChipItem';
 import MapControls from './MapControls';
 import MapMarker from './MapMarker';
+import { resetMapAnimateFlag } from '@features/store/mapSlice';
+import ChipItem from '@components/Layouts/ChipItem';
 import AttractionBottomSheet from './AttractionBottomSheet';
 import RouteOptionsBottomSheet from './RouteOptionsBottomSheet';
-import { setAttraction } from '@features/store/attractionSlice';
 
 const INITIAL_REGION = {
     latitude: 46.33255681298829,
@@ -34,7 +33,7 @@ const MAP_TYPES = [
 
 const mapApikey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-const Map = ({ jumpTo }) => {
+const MapScreen = ({ navigation }) => {
     const theme = useTheme();
     const dispatch = useDispatch();
 
@@ -410,8 +409,7 @@ const Map = ({ jumpTo }) => {
                         selectedAttraction={selectedAttraction}
                         categories={categories}
                         navigate={() => {
-                            dispatch(setAttraction(selectedAttraction));
-                            jumpTo('home');
+                            navigation.navigate('MapAttraction', { attraction: selectedAttraction });
                         }}
                         onRouteOptionsOpen={handleRouteOptionsOpen}
                         onClose={() => {
@@ -441,4 +439,4 @@ const Map = ({ jumpTo }) => {
     );
 };
 
-export default Map;
+export default MapScreen;

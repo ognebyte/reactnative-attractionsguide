@@ -8,7 +8,6 @@ const SkeletonLoading = ({ skeletonWidth = '100%', skeletonHeight = '100%' }) =>
 
     return (
         <View
-            // @ts-ignore
             style={{ width: skeletonWidth, height: skeletonHeight }}>
             <Skeleton
                 isLoading={true}
@@ -16,7 +15,6 @@ const SkeletonLoading = ({ skeletonWidth = '100%', skeletonHeight = '100%' }) =>
                 boneColor={customTheme.colors.inverseOnSurface}
                 highlightColor={customTheme.colors.surfaceVariant}
                 layout={[
-                    // @ts-ignore
                     { width: skeletonWidth, height: skeletonHeight }
                 ]}
             />

@@ -23,6 +23,14 @@ export const getAllAsyncStorage = async () => {
     try {
         const value = await AsyncStorage.getAllKeys();
         if (value.length == 0) return null;
+
+        console.log();
+        console.log('keys');
+        value.map(async v => {
+            let data = await getAsyncStorage(v);
+            console.log(v, data)
+        })
+
         return value;
     } catch (e) {
         throw new Error(e);

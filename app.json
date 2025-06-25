@@ -1,37 +1,42 @@
 {
-  "expo": {
-    "name": "reactnative-attractionsguide",
-    "slug": "reactnative-attractionsguide",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./public/icon.png",
-    "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./public/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#7A8463"
-    },
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./public/adaptive-icon.png",
-        "backgroundColor": "#7A8463"
-      },
-      "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
-      ],
-      "package": "com.ognebyte.reactnativeattractionsguide"
-    },
-    "web": {
-      "favicon": "./public/favicon.png"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "5071856b-f8a1-4642-b43e-196bbc7b5d1a"
-      }
+    "expo": {
+        "name": "reactnative-attractionsguide",
+        "slug": "reactnative-attractionsguide",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "icon": "./public/icon.png",
+        "userInterfaceStyle": "automatic",
+        "splash": {
+            "image": "./public/splash.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#7A8463"
+        },
+        "ios": {
+            "supportsTablet": true
+        },
+        "android": {
+            "adaptiveIcon": {
+                "foregroundImage": "./public/adaptive-icon.png",
+                "backgroundColor": "#7A8463"
+            },
+            "permissions": [
+                "ACCESS_FINE_LOCATION",
+                "ACCESS_COARSE_LOCATION"
+            ],
+            "package": "com.ognebyte.reactnativeattractionsguide",
+            "config": {
+                "googleMaps": {
+                    "apiKey": "process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY"
+                }
+            }
+        },
+        "web": {
+            "favicon": "./public/favicon.png"
+        },
+        "extra": {
+            "eas": {
+                "projectId": "5071856b-f8a1-4642-b43e-196bbc7b5d1a"
+            }
+        }
     }
-  }
 }

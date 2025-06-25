@@ -2,10 +2,10 @@ import { useDispatch } from "react-redux";
 import { View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Icon, Text } from 'react-native-paper';
-import ImageCarousel from '@/components/ImageCarousel';
-import GoBackButton from '@components/GoBackButton';
+import ImageCarousel from '@components/Layouts/ImageCarousel';
+import GoBackButton from '@components/Layouts/GoBackButton';
 import { setMapCoordinates } from "@features/store/mapSlice";
-import GoMapButton from "@components/GoMapButton";
+import GoMapButton from "@components/Layouts/GoMapButton";
 
 
 const CityScreen = ({ route, navigation }) => {

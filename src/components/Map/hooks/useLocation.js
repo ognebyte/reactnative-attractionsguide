@@ -8,7 +8,7 @@ export const useLocation = () => {
 
     const checkGpsStatus = async () => {
         const { status } = await Location.requestForegroundPermissionsAsync();
-        
+
         if (status !== "granted") {
             Alert.alert(
                 "Разрешение отклонено",
@@ -24,11 +24,9 @@ export const useLocation = () => {
         const isGpsEnabled = await Location.hasServicesEnabledAsync();
 
         if (!isGpsEnabled) {
-            Alert.alert(
-                "GPS отключен",
-                "Пожалуйста, включите GPS в настройках устройства.",
-                [{ text: "OK" }]
-            );
+            await Location.getCurrentPositionAsync({
+                accuracy: Location.Accuracy.Balanced
+            });
         }
 
         setGpsEnabled(isGpsEnabled);
